@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 版本信息
-VERSION="v1.0.2"
+VERSION="v1.0.3"
 
 # 颜色定义
 red='\033[0;31m'
@@ -136,25 +136,24 @@ batch_control() {
     done
 }
 
-# 优化后的状态对齐函数
+# 解决彩色字符对齐问题的状态显示函数
 show_status() {
     echo -e "-----------------------------------------------"
-    printf "%-10s %-15s %-10s\n" "端口" "状态" "内存占用"
+    echo -e "端口       状态           内存占用"
     echo -e "-----------------------------------------------"
     for s in $(ls /etc/systemd/system/gost_*.service 2>/dev/null); do
         port=$(echo $s | grep -oE '[0-9]+')
         status_raw=$(systemctl is-active gost_$port)
         if [[ "$status_raw" == "active" ]]; then
-            status_text="运行中"
-            status_show="${green}${status_text}${plain}"
+            status_show="${green}运行中${plain}"
         else
-            status_text="已停止"
-            status_show="${red}${status_text}${plain}"
+            status_show="${red}已停止${plain}"
         fi
         mem=$(systemctl show -p MemoryCurrent gost_$port | cut -d= -f2)
         [[ "$mem" == "[not set]" || "$mem" == "0" ]] && mem_mb="0.00" || mem_mb=$(echo "scale=2; $mem/1024/1024" | bc)
-        # 修正对齐：对中文字符进行补位
-        printf "%-10s %-20s %-10s\n" "$port" "$status_show" "${mem_mb}MB"
+        
+        # 使用 echo -e 配合固定宽度的制表符或空格手动对齐
+        echo -e "${port}      ${status_show}         ${mem_mb}MB"
     done
     echo -e "-----------------------------------------------"
 }

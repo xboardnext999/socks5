@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 版本信息
-VERSION="v1.0.1"
+VERSION="v1.0.2"
 
 # 颜色定义
 red='\033[0;31m'
@@ -16,7 +16,6 @@ plain='\033[0m'
 # 环境安装与自注册
 # ==============================
 install_self() {
-    # 下载最新脚本并创建快捷命令
     curl -Ls https://raw.githubusercontent.com/xboardnext999/socks5/main/socks5.sh -o /usr/local/bin/socks5_script
     chmod +x /usr/local/bin/socks5_script
     ln -sf /usr/local/bin/socks5_script /usr/local/bin/socks5
@@ -35,7 +34,6 @@ install_gost() {
 
 gen_rand() { head /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-8} | head -n 1; }
 
-# 随机端口生成逻辑
 gen_port() {
     while :; do
         port=$((RANDOM % 50001 + 10000))
@@ -54,21 +52,16 @@ get_ips() {
 add_proxy() {
     install_gost
     echo -e "--- 添加新代理端口 ---"
-    
     read -p "请输入用户名 [随机]: " S_USER
     [[ -z "$S_USER" ]] && S_USER=$(gen_rand 6)
-    
     read -p "请输入密码 [随机]: " S_PASS
     [[ -z "$S_PASS" ]] && S_PASS=$(gen_rand 12)
-    
     read -p "请输入端口 [回车随机]: " S_PORT
     [[ -z "$S_PORT" ]] && S_PORT=$(gen_port)
 
-    # 存储认证信息
     mkdir -p /etc/gost
     echo "${S_USER}:${S_PASS}" > /etc/gost/conf_${S_PORT}.txt
 
-    # 针对小内存 VPS 的 Systemd 配置
     cat <<EOF > /etc/systemd/system/gost_${S_PORT}.service
 [Unit]
 Description=Gost SOCKS5 Proxy Port ${S_PORT}
@@ -88,23 +81,17 @@ EOF
     systemctl daemon-reload
     systemctl enable gost_${S_PORT} >/dev/null 2>&1
     systemctl restart gost_${S_PORT}
-    
     echo -e "${green}✔ 配置成功！${plain}"
     show_single_info "$S_PORT" "$S_USER" "$S_PASS"
 }
 
 show_single_info() {
-    local port=$1
-    local user=$2
-    local pass=$3
-    get_ips
+    local port=$1; local user=$2; local pass=$3; get_ips
     echo -e "${green}代理安装成功！已设置开机自启${plain}"
     echo -e "${yellow}您的Sock5详细信息，请务必保存好！${plain}"
     echo -e "IPV4: ${green}${IP4:-未探测到}${plain}"
     echo -e "IPV6: ${green}${IP6:-未探测到}${plain}"
-    echo -e "用户: ${green}${user}${plain}"
-    echo -e "密码: ${green}${pass}${plain}"
-    echo -e "端口: ${green}${port}${plain}"
+    echo -e "用户: ${green}${user}${plain}  密码: ${green}${pass}${plain}  端口: ${green}${port}${plain}"
     echo -e "---"
     echo -e "${yellow}SOCKS5 详情：${plain}"
     [[ ! -z "$IP4" ]] && echo -e "IPv4 链接: ${cyan}socks5://${user}:${pass}@${IP4}:${port}${plain}"
@@ -117,8 +104,7 @@ show_all_info() {
     for s in $services; do
         port=$(echo $s | grep -oE '[0-9]+')
         auth=$(cat /etc/gost/conf_${port}.txt 2>/dev/null)
-        user=$(echo $auth | cut -d: -f1)
-        pass=$(echo $auth | cut -d: -f2)
+        user=$(echo $auth | cut -d: -f1); pass=$(echo $auth | cut -d: -f2)
         echo "-----------------------------"
         show_single_info "$port" "$user" "$pass"
     done
@@ -129,12 +115,13 @@ manage_single() {
     ls /etc/systemd/system/gost_*.service 2>/dev/null | grep -oE '[0-9]+'
     read -p "请输入要操作的端口: " port
     [[ ! -f "/etc/systemd/system/gost_${port}.service" ]] && echo "端口不存在" && return
-    echo "1. 启动 | 2. 停止 | 3. 删除"
-    read -p "选择操作 [1-3]: " op
+    echo "1. 启动 | 2. 停止 | 3. 重启 | 4. 删除"
+    read -p "选择操作 [1-4]: " op
     case $op in
-        1) systemctl start gost_$port && echo "已启动" ;;
-        2) systemctl stop gost_$port && echo "已停止" ;;
-        3) systemctl stop gost_$port; systemctl disable gost_$port; rm -f /etc/systemd/system/gost_$port.service /etc/gost/conf_$port.txt; echo "已删除" ;;
+        1) systemctl start gost_$port ;;
+        2) systemctl stop gost_$port ;;
+        3) systemctl restart gost_$port ;;
+        4) systemctl stop gost_$port; systemctl disable gost_$port; rm -f /etc/systemd/system/gost_$port.service /etc/gost/conf_$port.txt ;;
     esac
 }
 
@@ -147,19 +134,29 @@ batch_control() {
         [[ $op == 2 ]] && systemctl stop $name
         [[ $op == 3 ]] && systemctl restart $name
     done
-    echo "批量操作完成"
 }
 
+# 优化后的状态对齐函数
 show_status() {
+    echo -e "-----------------------------------------------"
     printf "%-10s %-15s %-10s\n" "端口" "状态" "内存占用"
+    echo -e "-----------------------------------------------"
     for s in $(ls /etc/systemd/system/gost_*.service 2>/dev/null); do
         port=$(echo $s | grep -oE '[0-9]+')
-        status=$(systemctl is-active gost_$port)
+        status_raw=$(systemctl is-active gost_$port)
+        if [[ "$status_raw" == "active" ]]; then
+            status_text="运行中"
+            status_show="${green}${status_text}${plain}"
+        else
+            status_text="已停止"
+            status_show="${red}${status_text}${plain}"
+        fi
         mem=$(systemctl show -p MemoryCurrent gost_$port | cut -d= -f2)
         [[ "$mem" == "[not set]" || "$mem" == "0" ]] && mem_mb="0.00" || mem_mb=$(echo "scale=2; $mem/1024/1024" | bc)
-        [[ "$status" == "active" ]] && status_col="${green}运行中${plain}" || status_col="${red}已停止${plain}"
-        printf "%-10s %-25s %-10s\n" "$port" "$status_col" "${mem_mb}MB"
+        # 修正对齐：对中文字符进行补位
+        printf "%-10s %-20s %-10s\n" "$port" "$status_show" "${mem_mb}MB"
     done
+    echo -e "-----------------------------------------------"
 }
 
 uninstall_all() {
@@ -177,9 +174,6 @@ uninstall_all() {
     exit 0
 }
 
-# ==============================
-# 菜单
-# ==============================
 menu() {
     clear
     echo -e "${green} SOCKS5 超轻量管理工具 ${yellow}${VERSION}${plain}"

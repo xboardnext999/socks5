@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 版本信息
-VERSION="v1.0.0"
+VERSION="v1.0.1"
 
 # 颜色定义
 red='\033[0;31m'
@@ -16,6 +16,7 @@ plain='\033[0m'
 # 环境安装与自注册
 # ==============================
 install_self() {
+    # 下载最新脚本并创建快捷命令
     curl -Ls https://raw.githubusercontent.com/xboardnext999/socks5/main/socks5.sh -o /usr/local/bin/socks5_script
     chmod +x /usr/local/bin/socks5_script
     ln -sf /usr/local/bin/socks5_script /usr/local/bin/socks5
@@ -34,11 +35,10 @@ install_gost() {
 
 gen_rand() { head /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-8} | head -n 1; }
 
-# 随机端口生成 (10000-60000)
+# 随机端口生成逻辑
 gen_port() {
     while :; do
         port=$((RANDOM % 50001 + 10000))
-        # 检查端口是否被占用
         (netstat -tuln | grep -q ":$port ") || { echo "$port"; break; }
     done
 }
@@ -49,7 +49,7 @@ get_ips() {
 }
 
 # ==============================
-# 功能函数
+# 核心功能
 # ==============================
 add_proxy() {
     install_gost
@@ -64,10 +64,11 @@ add_proxy() {
     read -p "请输入端口 [回车随机]: " S_PORT
     [[ -z "$S_PORT" ]] && S_PORT=$(gen_port)
 
-    # 存储配置
+    # 存储认证信息
     mkdir -p /etc/gost
     echo "${S_USER}:${S_PASS}" > /etc/gost/conf_${S_PORT}.txt
 
+    # 针对小内存 VPS 的 Systemd 配置
     cat <<EOF > /etc/systemd/system/gost_${S_PORT}.service
 [Unit]
 Description=Gost SOCKS5 Proxy Port ${S_PORT}
@@ -131,9 +132,9 @@ manage_single() {
     echo "1. 启动 | 2. 停止 | 3. 删除"
     read -p "选择操作 [1-3]: " op
     case $op in
-        1) systemctl start gost_$port ;;
-        2) systemctl stop gost_$port ;;
-        3) systemctl stop gost_$port; systemctl disable gost_$port; rm -f /etc/systemd/system/gost_$port.service /etc/gost/conf_$port.txt ;;
+        1) systemctl start gost_$port && echo "已启动" ;;
+        2) systemctl stop gost_$port && echo "已停止" ;;
+        3) systemctl stop gost_$port; systemctl disable gost_$port; rm -f /etc/systemd/system/gost_$port.service /etc/gost/conf_$port.txt; echo "已删除" ;;
     esac
 }
 
@@ -146,6 +147,7 @@ batch_control() {
         [[ $op == 2 ]] && systemctl stop $name
         [[ $op == 3 ]] && systemctl restart $name
     done
+    echo "批量操作完成"
 }
 
 show_status() {
@@ -161,7 +163,7 @@ show_status() {
 }
 
 uninstall_all() {
-    echo -e "${yellow}► 正在彻底卸载并清理脚本...${plain}"
+    echo -e "${yellow}► 正在执行彻底卸载并清理残留...${plain}"
     services=$(ls /etc/systemd/system/gost_*.service 2>/dev/null)
     for s in $services; do
         name=$(basename $s)
@@ -171,7 +173,7 @@ uninstall_all() {
     pkill -9 gost >/dev/null 2>&1
     rm -rf /etc/systemd/system/gost_*.service /etc/gost /usr/bin/gost /usr/local/bin/socks5 /usr/local/bin/sock5 /usr/local/bin/socks5_script
     systemctl daemon-reload
-    echo -e "${green}✔ 卸载完成！脚本已自我销毁。${plain}"
+    echo -e "${green}✔ 卸载完成！脚本已清理。${plain}"
     exit 0
 }
 

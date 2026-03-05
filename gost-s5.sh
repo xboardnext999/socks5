@@ -194,8 +194,11 @@ show_single_info() {
     local port=$1; local user=$2; local pass=$3; get_ips
     echo -e "${green}代理安装成功！已设置开机自启${plain}"
     echo -e "${yellow}您的Sock5详细信息，请务必保存好！${plain}"
-    echo -e "IPV4: ${green}${IP4:-未探测到}${plain} IPV6: ${green}${IP6:-未探测到}${plain}"
-    echo -e "用户: ${green}${user}${plain} 密码: ${green}${pass}${plain} 端口: ${green}${port}${plain}"
+    echo -e "IPV4: ${green}${IP4:-未探测到}${plain}"
+    echo -e "IPV6: ${green}${IP6:-未探测到}${plain}"
+    echo -e "用户: ${green}${user}${plain}"
+    echo -e "密码: ${green}${pass}${plain}"
+    echo -e "端口: ${green}${port}${plain}"
     echo -e "---"
     echo -e "${yellow}SOCKS5 详情：${plain}"
     [[ ! -z "$IP4" ]] && echo -e "IPv4 链接: ${cyan}socks5://${user}:${pass}@${IP4}:${port}${plain}"

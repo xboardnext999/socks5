@@ -63,7 +63,7 @@ get_total_traffic() {
 # 环境安装与同步
 # ==============================
 install_self() {
-    echo -e "${yellow}► 正在同步最新脚本 (v${VERSION})...${plain}"
+    echo -e "${yellow}► 正在同步最新脚本 (${VERSION})...${plain}"
     curl -Ls "https://raw.githubusercontent.com/xboardnext999/gost-s5/main/gost-s5.sh?v=$(date +%s)" -o /usr/local/bin/gost_s5_script
     chmod +x /usr/local/bin/gost_s5_script
     ln -sf /usr/local/bin/gost_s5_script /usr/local/bin/socks5
@@ -92,17 +92,16 @@ get_ips() { IP4=$(curl -s4m 5 ip.sb || curl -s4m 5 ifconfig.me); IP6=$(curl -s6m
 add_proxy() {
     install_gost
     echo -e "--- 添加新代理端口 ---"
-    read -p "请输入用户名 [随机]: " S_USER
+    read -p "请输入用户名 [回车随机]: " S_USER
     [[ -z "$S_USER" ]] && S_USER=$(gen_rand 6)
-    read -p "请输入密码 [随机]: " S_PASS
+    read -p "请输入密码 [回车随机]: " S_PASS
     [[ -z "$S_PASS" ]] && S_PASS=$(gen_rand 12)
     read -p "请输入端口 [回车随机]: " S_PORT
     [[ -z "$S_PORT" ]] && S_PORT=$(gen_port)
 
     mkdir -p /etc/gost-s5
     echo "${S_USER}:${S_PASS}" > /etc/gost-s5/conf_${S_PORT}.txt
-
-    # 此处已移除 MemoryLimit 限制
+    
     cat <<EOF > /etc/systemd/system/gost_${S_PORT}.service
 [Unit]
 Description=Gost SOCKS5 Proxy Port ${S_PORT}

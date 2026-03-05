@@ -4,7 +4,7 @@
 
 **gost-s5** 是一款基于 **GOST** 开发的 SOCKS5 代理一键管理工具。专为小内存 VPS（如 **200MB RAM** 内存）进行深度优化，支持多端口独立管理、全自动配置及开机自启。
 
-## ✨ 功能特性
+## 功能特性
 
 - **极致轻量**：针对极小内存环境优化，每个端口实例通过 Systemd 严格限制 **60MB** 内存占用。
 - **多端口独立管理**：支持无限添加端口，每个端口作为独立服务运行，支持单独 启动/停止/删除。
@@ -14,7 +14,7 @@
 - **快捷命令调用菜单**：支持 `gost-s5`、`sock5`、`socks5` 三种指令快速调出菜单。
 - **彻底卸载**：选项 6 提供“彻底删除本服务”功能，清理所有进程、配置、文件目录所有内容 `/etc/gost-s5` 及快捷命令。
 
-## 🚀 一键安装
+## 一键安装
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/xboardnext999/gost-s5/main/gost-s5.sh)
@@ -29,14 +29,14 @@ socks5
 sock5
 ```
 
-## 🔥 核心优势
-## 1. 资源隔离 (Memory Shield)
+## 核心优势
+### 1. 资源隔离 (Memory Shield)
 每个代理实例通过 Systemd 进行内存硬隔离，内存限制为 60MB。即使节点遭遇流量攻击，服务会自动重启而不会导致整个 VPS 宕机失联。
 
-## 2. 独立管理 (Decoupling)
+### 2. 独立管理 (Decoupling)
 不同于传统脚本“一关全关”，gost-s5 为每个端口创建独立的 .service 文件。你可以随时通过菜单单独暂停某个特定的端口。
 
-## 3. 全自动配置
+### 3. 全自动配置
 如果不输入用户名、密码或端口，脚本将自动生成：
 
 用户名：随机 6 位字符
@@ -75,3 +75,17 @@ sock5
 - 小内存服务器建议开启 SWAP 以应对突发流量。
 
 - 建议定期更换随机生成的端口以规避扫描。
+
+## 免责声明
+
+本项目由 Xboard NEXT 团队 开发与维护，并以开源形式发布。
+
+项目按“AS IS”提供，不对其稳定性、可用性或适用性提供任何形式的保证。如在使用过程中遇到问题，欢迎通过 Issues 提交反馈
+
+因使用本项目所产生的任何直接或间接后果，Xboard NEXT团队不承担任何责任。
+
+使用本项目即视为已了解并接受上述说明。
+
+## Stars 增长记录
+
+[![Star History Chart](https://api.star-history.com/image?repos=xboardnext999/gost-s5&type=date&legend=top-left)](https://www.star-history.com/?repos=xboardnext999%2Fgost-s5&type=date&legend=top-left)

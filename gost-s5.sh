@@ -12,9 +12,7 @@ plain='\033[0m'
 
 [[ $EUID -ne 0 ]] && echo -e "${red}错误:${plain} 必须使用 root 用户运行！" && exit 1
 
-# ==============================
 # 环境安装与同步 (gost-s5 专用)
-# ==============================
 install_self() {
     # 强制跳过 GitHub 缓存获取最新版
     echo -e "${yellow}► 正在同步最新脚本 (v${VERSION})...${plain}"
@@ -27,7 +25,7 @@ install_self() {
 
 install_gost() {
     if [[ ! -f "/usr/bin/gost" ]]; then
-        echo -e "${yellow}► 正在下载 GOST 引擎...${plain}"
+        echo -e "${yellow}► 正在下载 GOST ...${plain}"
         ARCH=$(uname -m)
         URL="https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-amd64-2.11.5.gz"
         [[ "$ARCH" == "aarch64" ]] && URL="https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-armv8-2.11.5.gz"
@@ -50,9 +48,7 @@ get_ips() {
     IP6=$(curl -s6m 5 ip.sb || curl -s6m 5 ifconfig.me)
 }
 
-# ==============================
 # 核心功能
-# ==============================
 add_proxy() {
     install_gost
     echo -e "--- 添加新代理端口 ---"
@@ -63,7 +59,7 @@ add_proxy() {
     read -p "请输入端口 [回车随机]: " S_PORT
     [[ -z "$S_PORT" ]] && S_PORT=$(gen_port)
 
-    # 存储配置信息到新目录 /etc/gost-s5
+    # 存储配置信息到/etc/gost-s5
     mkdir -p /etc/gost-s5
     echo "${S_USER}:${S_PASS}" > /etc/gost-s5/conf_${S_PORT}.txt
 

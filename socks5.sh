@@ -13,7 +13,6 @@ plain='\033[0m'
 # 自动安装 socks5 命令到系统
 # ==============================
 install_self() {
-    # 无论脚本从哪里启动，都确保 /usr/local/bin/socks5 存在最新副本
     if [[ ! -f "/usr/local/bin/socks5" ]]; then
         echo -e "${yellow}► 正在配置系统快捷命令 [ socks5 ] ...${plain}"
         curl -Ls https://raw.githubusercontent.com/xboardnext999/socks5/main/socks5.sh -o /usr/local/bin/socks5
@@ -47,7 +46,7 @@ install_gost() {
 }
 
 # ==============================
-# 配置并启动服务 (针对 200MB 内存优化)
+# 配置并启动服务
 # ==============================
 setup_service() {
     echo -e "-----------------------------"
@@ -62,7 +61,7 @@ setup_service() {
     read -p "请输入端口 [默认10000]: " S_PORT
     [[ -z "$S_PORT" ]] && S_PORT="10000"
     
-    # 写入 Systemd (内存限制在 60M 保证系统稳定)
+    # 写入 Systemd (针对 200MB 内存限制在 60M)
     cat <<EOF > /etc/systemd/system/gost.service
 [Unit]
 Description=Gost SOCKS5 Proxy
@@ -83,26 +82,28 @@ EOF
     systemctl enable gost >/dev/null 2>&1
     systemctl restart gost
 
-    # 核心修复：分别强制探测 IPv4 和 IPv6
+    # 获取双栈 IP
     IP4=$(curl -s4m 5 ip.sb || curl -s4m 5 ifconfig.me)
     IP6=$(curl -s6m 5 ip.sb || curl -s6m 5 ifconfig.me)
 
     echo -e "-----------------------------"
-    echo -e "${green}✔ 代理安装成功！已设置开机自启${plain}"
+    echo -e "${green}代理安装成功！已设置开机自启${plain}"
+    echo -e "${yellow}您的Sock5详细信息，请务必保存好！${plain}"
+    echo -e "IPV4: ${green}${IP4}${plain}"
+    echo -e "IPV6: ${green}${IP6}${plain}"
+    echo -e "用户: ${green}${S_USER}${plain}"
+    echo -e "密码: ${green}${S_PASS}${plain}"
+    echo -e "端口: ${green}${S_PORT}${plain}"
+    echo -e "---"
     echo -e "${yellow}SOCKS5 详情：${plain}"
     
     if [[ ! -z "$IP4" ]]; then
-        echo -e "IPv4 地址: ${green}${IP4}${plain}"
         echo -e "IPv4 链接: ${cyan}socks5://${S_USER}:${S_PASS}@${IP4}:${S_PORT}${plain}"
     fi
 
     if [[ ! -z "$IP6" ]]; then
-        echo -e "IPv6 地址: ${green}[${IP6}]${plain}"
         echo -e "IPv6 链接: ${cyan}socks5://${S_USER}:${S_PASS}@[${IP6}]:${S_PORT}${plain}"
     fi
-
-    echo -e "-----------------------------"
-    echo -e "用户: ${yellow}${S_USER}${plain}  密码: ${yellow}${S_PASS}${plain}  端口: ${yellow}${S_PORT}${plain}"
     echo -e "-----------------------------"
 }
 
@@ -113,17 +114,10 @@ uninstall_all() {
     echo -e "${yellow}► 正在执行彻底卸载...${plain}"
     systemctl stop gost >/dev/null 2>&1
     systemctl disable gost >/dev/null 2>&1
-    
-    # 强制杀死残留进程
     pkill -9 gost >/dev/null 2>&1
-    
-    # 删除所有相关文件
-    rm -f /etc/systemd/system/gost.service
-    rm -f /usr/bin/gost
-    rm -f /usr/local/bin/socks5
-    
+    rm -f /etc/systemd/system/gost.service /usr/bin/gost /usr/local/bin/socks5
     systemctl daemon-reload
-    echo -e "${green}✔ 卸载完成，所有进程已杀掉，文件已清理干净${plain}"
+    echo -e "${green}✔ 卸载完成，进程已杀掉，文件已清理干净${plain}"
 }
 
 # ==============================

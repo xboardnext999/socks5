@@ -65,7 +65,7 @@ get_total_traffic() {
 # 环境安装与同步
 # ==============================
 install_self() {
-    echo -e "${yellow}► 正在同步最新脚本到集中目录...${plain}"
+    echo -e "${yellow}► 正在同步最新脚本...${plain}"
     curl -Ls "https://raw.githubusercontent.com/xboardnext999/gost-s5/main/gost-s5.sh?v=$(date +%s)" -o ${BASE_DIR}/gost-s5.sh
     chmod +x ${BASE_DIR}/gost-s5.sh
     
@@ -79,7 +79,7 @@ install_self() {
 
 install_gost() {
     if [[ ! -f "${BASE_DIR}/gost" ]]; then
-        echo -e "${yellow}► 正在下载 GOST 引擎到 ${BASE_DIR}...${plain}"
+        echo -e "${yellow}► 正在下载 GOST  ${BASE_DIR}...${plain}"
         ARCH=$(uname -m)
         URL="https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-amd64-2.11.5.gz"
         [[ "$ARCH" == "aarch64" ]] && URL="https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-armv8-2.11.5.gz"
@@ -222,7 +222,7 @@ batch_control() {
 }
 
 uninstall_all() {
-    echo -e "${yellow}► 正在彻底卸载 gost-s5 并清理集中目录...${plain}"
+    echo -e "${yellow}► 正在彻底卸载 gost-s5 并清理服务...${plain}"
     services=$(ls /etc/systemd/system/gost_*.service 2>/dev/null)
     for s in $services; do
         port=$(echo $s | grep -oE '[0-9]+')
@@ -242,14 +242,14 @@ uninstall_all() {
 
 menu() {
     clear
-    echo -e "${green} gost-s5 集中管理版 ${yellow}${VERSION}${plain}"
+    echo -e "${green} gost-s5 超轻量多端口 SOCKS5 管理工具 ${yellow}${VERSION}${plain}"
     echo "-----------------------------"
     echo "1.安装/重置 SOCKS5 代理"
     echo "2.查看/管理单个端口 (启动/停止/删除/清零)"
     echo "3.批量操作 (全部开启/全部停止/全部重启)"
     echo "4.查看当前运行状态"
     echo "5.查看所有代理信息"
-    echo "6.一键卸载清理"
+    echo "6.一键卸载服务"
     echo "7.退出菜单"
     echo "-----------------------------"
     read -rp "请输入选项 [1-7]: " num

@@ -164,7 +164,7 @@ show_single_info() {
 
 show_status() {
     echo -e "----------------------------------------------------------------"
-    echo -e "端口\t状态\t\t内存占用\t累计流量(重启不丢)"
+    echo -e "端口\t状态\t\t内存占用\t累计流量"
     echo -e "----------------------------------------------------------------"
     local total_all_ports=0
     for s in $(ls /etc/systemd/system/gost_*.service 2>/dev/null); do
